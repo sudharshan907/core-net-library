@@ -497,15 +497,28 @@ libnet_status interface_up(char *if_name)
         struct rtnl_link *change;
         struct nl_cache *cache;
         libnet_status err = CNL_STATUS_FAILURE;
+        CNL_LOG_ERROR(" %s:sudh 1 interface_up called for ifname\n",
+                        if_name);
+FILE *fp = fopen("/tmp/sudh.txt", "a");
+        
+if (fp) {
+                fprintf(fp, "[interface_up] 1: if_name=%s\n", if_name ? if_name : "(null)");
+       }
 
         sk = libnet_alloc_socket();
         if (sk == NULL) {
                 CNL_LOG_ERROR("Unable to allocate memory for socket\n");
+                if (fp) {
+                fprintf(fp, "[interface_up] 2: if_name=%s\n", if_name ? if_name : "(null)");
+       }
                 return err;
         }
 
         if (libnet_connect(sk, NETLINK_ROUTE) < 0) {
                 CNL_LOG_ERROR("Unable to connect socket\n");
+                if (fp) {
+                fprintf(fp, "[interface_up] 3: if_name=%s\n", if_name ? if_name : "(null)");
+       }
                 goto FREE_SOCKET;
         }
 
@@ -513,33 +526,62 @@ libnet_status interface_up(char *if_name)
         if (ret < 0) {
                 CNL_LOG_ERROR("Unable to allocate cache: %s (err=%d)\n",
                         nl_geterror(ret), ret);
+                if (fp) {
+                fprintf(fp, "[interface_up] 4: if_name=%s\n", if_name ? if_name : "(null)");
+       }
                 goto FREE_SOCKET;
         }
 
         if (!(link = rtnl_link_get_by_name(cache, if_name))) {
                 CNL_LOG_ERROR("Interface '%s' not found\n", if_name);
+                if (fp) {
+                fprintf(fp, "[interface_up] 5: if_name=%s\n", if_name ? if_name : "(null)");
+       }
                 goto FREE_CACHE;
         }
 
         unsigned int flags = rtnl_link_get_flags(link);
         if (flags & IFF_UP) {
+                if (fp) {
+                fprintf(fp, "[interface_up] 6: if_name=%s\n", if_name ? if_name : "(null)");
+       }
                 err = CNL_STATUS_SUCCESS;
                 goto FREE_LINK;
         }
 
         change = rtnl_link_alloc();
+        if (fp) {
+                fprintf(fp, "[interface_up] 7: if_name=%s\n", if_name ? if_name : "(null)");
+       }
 
         flags |= IFF_UP;
-
+ if (fp) {
+                fprintf(fp, "[interface_up] 8: if_name=%s\n", if_name ? if_name : "(null)");
+       }
         rtnl_link_set_flags(change, flags);
+        if (fp) {
+                fprintf(fp, "[interface_up] 9: if_name=%s\n", if_name ? if_name : "(null)");
+       }
         ret = rtnl_link_change(sk, link, change, 0);
+        if (fp) {
+                fprintf(fp, "[interface_up] 11: if_name=%s\n", if_name ? if_name : "(null)");
+       }
         if (ret < 0) {
-                CNL_LOG_ERROR("Unable to bring up interface %s: %s (err=%d)\n",
+                CNL_LOG_ERROR("sudh Unable to bring up interface %s: %s (err=%d)\n",
                         if_name, nl_geterror(ret), ret);
+                CNL_LOG_ERROR(" %s:sudh 2 interface_up called for ifname\n",
+                        if_name);
+                
+                if (fp) {
+                fprintf(fp, "[interface_up] 12: if_name=%s\n", if_name ? if_name : "(null)");
+       }
                 goto FREE_LINK2;
         }
 
         err = CNL_STATUS_SUCCESS;
+        if (fp) {
+                fprintf(fp, "[interface_up] 13: if_name=%s\n", if_name ? if_name : "(null)");
+       }
 FREE_LINK2:
         rtnl_link_put(change);
 FREE_LINK:
@@ -548,10 +590,13 @@ FREE_CACHE:
         nl_cache_free(cache);
 FREE_SOCKET:
         nl_socket_free(sk);
-
+        CNL_LOG_ERROR(" %s:sudh 3 interface_up called for ifname error returning %d\n",
+                        if_name,err);
+if (fp) {
+                fprintf(fp, "[interface_up] 14: if_name=%s\n", if_name ? if_name : "(null)");
+       }
         return err;
 }
-
 /**
  * interface_down
  * @if_name: interface name
